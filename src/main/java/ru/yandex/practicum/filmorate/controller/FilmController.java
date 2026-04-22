@@ -12,6 +12,10 @@ import java.util.*;
 @RestController
 @RequestMapping("/films")
 public class FilmController {
+    private static final int MAX_DESCRIPTION_LENGTH = 200;
+    private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
+    private static final int MIN_DURATION = 1;
+
     private final Map<Long, Film> films = new HashMap<>();
     private long nextId = 1;
 
@@ -48,17 +52,17 @@ public class FilmController {
             log.warn("Ошибка валидации: пустое название фильма");
             throw new ValidationException("Название не может быть пустым");
         }
-        if (film.getDescription() != null && film.getDescription().length() > 200) {
-            log.warn("Ошибка валидации: описание длиной {} символов", film.getDescription().length());
-            throw new ValidationException("Описание не должно превышать 200 символов");
+        if (film.getDescription() != null && film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
+            log.warn("Ошибка валидации: описание длиной {} символов (макс. {})",
+                    film.getDescription().length(), MAX_DESCRIPTION_LENGTH);
+            throw new ValidationException("Описание не должно превышать " + MAX_DESCRIPTION_LENGTH + " символов");
         }
-        LocalDate minRelease = LocalDate.of(1895, 12, 28);
-        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(minRelease)) {
-            log.warn("Ошибка валидации: дата релиза {}", film.getReleaseDate());
-            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
+            log.warn("Ошибка валидации: дата релиза {} (мин. {})", film.getReleaseDate(), MIN_RELEASE_DATE);
+            throw new ValidationException("Дата релиза не может быть раньше " + MIN_RELEASE_DATE);
         }
-        if (film.getDuration() == null || film.getDuration() <= 0) {
-            log.warn("Ошибка валидации: продолжительность {}", film.getDuration());
+        if (film.getDuration() == null || film.getDuration() < MIN_DURATION) {
+            log.warn("Ошибка валидации: продолжительность {} (мин. {})", film.getDuration(), MIN_DURATION);
             throw new ValidationException("Продолжительность должна быть положительным числом");
         }
     }
