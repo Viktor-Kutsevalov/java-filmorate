@@ -1,16 +1,30 @@
 package ru.yandex.practicum.filmorate;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class FilmValidationTest {
-    private final FilmController controller = new FilmController();
+class FilmValidationTest {
+    private FilmController controller;
+
+    @BeforeEach
+    void setUp() {
+        FilmStorage filmStorage = new InMemoryFilmStorage();
+        UserStorage userStorage = new InMemoryUserStorage();
+        FilmService filmService = new FilmService(filmStorage, userStorage);
+        controller = new FilmController(filmStorage, filmService);
+    }
 
     @Test
     void shouldNotAddFilmWithBlankName() {
@@ -26,7 +40,7 @@ public class FilmValidationTest {
     void shouldNotAddFilmWithLongDescription() {
         Film film = new Film();
         film.setName("Русский фильм");
-        film.setDescription("а".repeat(201)); // 201 символ
+        film.setDescription("а".repeat(201));
         film.setReleaseDate(LocalDate.now());
         film.setDuration(100);
         assertThrows(ValidationException.class, () -> controller.addFilm(film));
