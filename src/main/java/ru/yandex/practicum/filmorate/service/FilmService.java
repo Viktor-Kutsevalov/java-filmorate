@@ -10,9 +10,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -50,26 +48,23 @@ public class FilmService {
     }
 
     public Film addLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
+        getFilmById(filmId);
         if (userStorage.getById(userId).isEmpty()) {
             throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
-        film.getLikes().add(userId);
+        filmStorage.addLike(filmId, userId);
         log.debug("Пользователь {} поставил лайк фильму {}", userId, filmId);
-        return film;
+        return getFilmById(filmId);
     }
 
     public Film removeLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
+        getFilmById(filmId);
         if (userStorage.getById(userId).isEmpty()) {
             throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
-        if (!film.getLikes().remove(userId)) {
-            log.warn("Попытка удалить несуществующий лайк от {} у фильма {}", userId, filmId);
-        } else {
-            log.debug("Пользователь {} удалил лайк у фильма {}", userId, filmId);
-        }
-        return film;
+        filmStorage.removeLike(filmId, userId);
+        log.debug("Пользователь {} удалил лайк у фильма {}", userId, filmId);
+        return getFilmById(filmId);
     }
 
     public List<Film> getPopularFilms(Integer count) {
@@ -77,10 +72,7 @@ public class FilmService {
             throw new ValidationException("Параметр count должен быть положительным числом");
         }
         int limit = (count == null) ? DEFAULT_POPULAR_COUNT : count;
-        return filmStorage.getAll().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
-                .limit(limit)
-                .collect(Collectors.toList());
+        return filmStorage.getPopularFilms(limit);
     }
 
     private void validateFilm(Film film) {
