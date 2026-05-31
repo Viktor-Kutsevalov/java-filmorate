@@ -3,9 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.GenreRepository;
+import ru.yandex.practicum.filmorate.dal.MpaRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -24,6 +28,8 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final MpaRepository mpaRepository;
+    private final GenreRepository genreRepository;
 
     public List<Film> getAllFilms() {
         return filmStorage.getAll();
@@ -36,6 +42,7 @@ public class FilmService {
 
     public Film addFilm(Film film) {
         validateFilm(film);
+        validateMpaAndGenres(film);
         return filmStorage.add(film);
     }
 
@@ -44,6 +51,7 @@ public class FilmService {
         if (film.getId() == null || filmStorage.getById(film.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
         }
+        validateMpaAndGenres(film);
         return filmStorage.update(film);
     }
 
@@ -87,6 +95,20 @@ public class FilmService {
         }
         if (film.getDuration() == null || film.getDuration() < MIN_DURATION) {
             throw new ValidationException("Продолжительность должна быть положительным числом");
+        }
+    }
+
+    private void validateMpaAndGenres(Film film) {
+        if (film.getMpa() != null && film.getMpa().getId() != 0) {
+            mpaRepository.findById(film.getMpa().getId())
+                    .orElseThrow(() -> new NotFoundException("MPA с id=" + film.getMpa().getId() + " не найден"));
+        }
+        // Проверка жанров
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            for (Genre genre : film.getGenres()) {
+                genreRepository.findById(genre.getId())
+                        .orElseThrow(() -> new NotFoundException("Жанр с id=" + genre.getId() + " не найден"));
+            }
         }
     }
 }
