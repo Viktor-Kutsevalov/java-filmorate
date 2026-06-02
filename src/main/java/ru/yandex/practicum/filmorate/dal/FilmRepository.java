@@ -51,7 +51,7 @@ public class FilmRepository extends BaseRepository<Film> {
 
     public Optional<Film> findById(long id) {
         Optional<Film> filmOpt = findOne(FIND_BY_ID, id);
-        filmOpt.ifPresent(this::loadGenresAndLikesForOne);
+        filmOpt.ifPresent(film -> loadGenresAndLikes(List.of(film)));
         return filmOpt;
     }
 
@@ -103,7 +103,9 @@ public class FilmRepository extends BaseRepository<Film> {
     }
 
     private void loadGenresAndLikes(List<Film> films) {
-        if (films.isEmpty()) return;
+        if (films.isEmpty()) {
+            return;
+        }
         Map<Long, Set<Genre>> genresMap = loadGenresForFilms(films);
         Map<Long, Set<Long>> likesMap = loadLikesForFilms(films);
         for (Film film : films) {
@@ -113,26 +115,11 @@ public class FilmRepository extends BaseRepository<Film> {
         }
     }
 
-    private void loadGenresAndLikesForOne(Film film) {
-        Set<Genre> genres = new HashSet<>(jdbcTemplate.query(
-                "SELECT g.id, g.name FROM genres g JOIN film_genre fg ON g.id = fg.genre_id WHERE fg.film_id = ?",
-                (rs, rowNum) -> {
-                    Genre g = new Genre();
-                    g.setId(rs.getInt("id"));
-                    g.setName(rs.getString("name"));
-                    return g;
-                }, film.getId()));
-        film.setGenres(genres);
-
-        Set<Long> likes = new HashSet<>(jdbcTemplate.queryForList(
-                "SELECT user_id FROM film_likes WHERE film_id = ?", Long.class, film.getId()));
-        film.getLikes().clear();
-        film.getLikes().addAll(likes);
-    }
-
     private Map<Long, Set<Genre>> loadGenresForFilms(List<Film> films) {
         List<Long> filmIds = films.stream().map(Film::getId).collect(Collectors.toList());
-        if (filmIds.isEmpty()) return Map.of();
+        if (filmIds.isEmpty()) {
+            return Map.of();
+        }
         MapSqlParameterSource params = new MapSqlParameterSource("ids", filmIds);
         String query = "SELECT fg.film_id, g.id, g.name FROM film_genre fg JOIN genres g ON fg.genre_id = g.id WHERE fg.film_id IN (:ids)";
         Map<Long, Set<Genre>> result = new HashMap<>();
@@ -148,7 +135,9 @@ public class FilmRepository extends BaseRepository<Film> {
 
     private Map<Long, Set<Long>> loadLikesForFilms(List<Film> films) {
         List<Long> filmIds = films.stream().map(Film::getId).collect(Collectors.toList());
-        if (filmIds.isEmpty()) return Map.of();
+        if (filmIds.isEmpty()) {
+            return Map.of();
+        }
         MapSqlParameterSource params = new MapSqlParameterSource("ids", filmIds);
         String query = "SELECT film_id, user_id FROM film_likes WHERE film_id IN (:ids)";
         Map<Long, Set<Long>> result = new HashMap<>();
