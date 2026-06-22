@@ -25,10 +25,17 @@ public class ErrorHandler {
         return Map.of("error", e.getMessage());
     }
 
+    @ExceptionHandler(InternalServerException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<String, String> handleInternalServer(InternalServerException e) {
+        log.error("Внутренняя ошибка сервера: {}", e.getMessage(), e);
+        return Map.of("error", e.getMessage());
+    }
+
     @ExceptionHandler(Throwable.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleOther(Throwable e) {
-        log.error("Внутренняя ошибка сервера", e);
-        return Map.of("error", "Произошла внутренняя ошибка сервера");
+        log.error("Непредвиденная ошибка", e);
+        return Map.of("error", "Произошла непредвиденная ошибка.");
     }
 }

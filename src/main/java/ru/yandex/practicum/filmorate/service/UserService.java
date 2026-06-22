@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -47,35 +46,28 @@ public class UserService {
     }
 
     public void addFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
-        log.debug("Пользователи {} и {} стали друзьями", userId, friendId);
+        getUserById(userId);
+        getUserById(friendId);
+        userStorage.addFriend(userId, friendId);
+        log.debug("Пользователь {} добавил в друзья {}", userId, friendId);
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
-        log.debug("Пользователи {} и {} перестали быть друзьями", userId, friendId);
+        getUserById(userId);
+        getUserById(friendId);
+        userStorage.removeFriend(userId, friendId);
+        log.debug("Пользователь {} удалил из друзей {}", userId, friendId);
     }
 
     public List<User> getFriends(Long userId) {
-        User user = getUserById(userId);
-        return user.getFriends().stream()
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        getUserById(userId);
+        return userStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(Long userId, Long otherId) {
-        User user = getUserById(userId);
-        User other = getUserById(otherId);
-        return user.getFriends().stream()
-                .filter(other.getFriends()::contains)
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        getUserById(userId);
+        getUserById(otherId);
+        return userStorage.getCommonFriends(userId, otherId);
     }
 
     private void validateUser(User user) {

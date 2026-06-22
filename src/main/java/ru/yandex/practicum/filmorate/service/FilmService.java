@@ -3,15 +3,19 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.GenreRepository;
+import ru.yandex.practicum.filmorate.dal.MpaRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,6 +30,8 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final MpaRepository mpaRepository;
+    private final GenreRepository genreRepository;
 
     public List<Film> getAllFilms() {
         return filmStorage.getAll();
@@ -38,6 +44,7 @@ public class FilmService {
 
     public Film addFilm(Film film) {
         validateFilm(film);
+        validateMpaAndGenres(film);
         return filmStorage.add(film);
     }
 
@@ -46,30 +53,28 @@ public class FilmService {
         if (film.getId() == null || filmStorage.getById(film.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
         }
+        validateMpaAndGenres(film);
         return filmStorage.update(film);
     }
 
     public Film addLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
+        getFilmById(filmId);
         if (userStorage.getById(userId).isEmpty()) {
             throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
-        film.getLikes().add(userId);
+        filmStorage.addLike(filmId, userId);
         log.debug("Пользователь {} поставил лайк фильму {}", userId, filmId);
-        return film;
+        return getFilmById(filmId);
     }
 
     public Film removeLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
+        getFilmById(filmId);
         if (userStorage.getById(userId).isEmpty()) {
             throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
-        if (!film.getLikes().remove(userId)) {
-            log.warn("Попытка удалить несуществующий лайк от {} у фильма {}", userId, filmId);
-        } else {
-            log.debug("Пользователь {} удалил лайк у фильма {}", userId, filmId);
-        }
-        return film;
+        filmStorage.removeLike(filmId, userId);
+        log.debug("Пользователь {} удалил лайк у фильма {}", userId, filmId);
+        return getFilmById(filmId);
     }
 
     public List<Film> getPopularFilms(Integer count) {
@@ -77,10 +82,7 @@ public class FilmService {
             throw new ValidationException("Параметр count должен быть положительным числом");
         }
         int limit = (count == null) ? DEFAULT_POPULAR_COUNT : count;
-        return filmStorage.getAll().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
-                .limit(limit)
-                .collect(Collectors.toList());
+        return filmStorage.getPopularFilms(limit);
     }
 
     private void validateFilm(Film film) {
@@ -95,6 +97,26 @@ public class FilmService {
         }
         if (film.getDuration() == null || film.getDuration() < MIN_DURATION) {
             throw new ValidationException("Продолжительность должна быть положительным числом");
+        }
+    }
+
+    private void validateMpaAndGenres(Film film) {
+        if (film.getMpa() != null && film.getMpa().getId() != 0) {
+            mpaRepository.findById(film.getMpa().getId())
+                    .orElseThrow(() -> new NotFoundException("MPA с id=" + film.getMpa().getId() + " не найден"));
+        }
+        // Проверка жанров одним запросом
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            Set<Integer> genreIds = film.getGenres().stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+            List<Genre> existingGenres = genreRepository.findAllByIds(genreIds);
+            if (existingGenres.size() != genreIds.size()) {
+                Set<Integer> existingIds = existingGenres.stream().map(Genre::getId).collect(Collectors.toSet());
+                Set<Integer> missingIds = new HashSet<>(genreIds);
+                missingIds.removeAll(existingIds);
+                throw new NotFoundException("Жанры с id = " + missingIds + " не найдены");
+            }
         }
     }
 }
