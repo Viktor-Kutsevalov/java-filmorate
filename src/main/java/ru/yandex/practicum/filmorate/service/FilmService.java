@@ -63,9 +63,7 @@ public class FilmService {
 
     public Film addLike(Long filmId, Long userId) {
         getFilmById(filmId);
-        if (userStorage.getById(userId).isEmpty()) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
-        }
+        validateUserById(userId);
         filmStorage.addLike(filmId, userId);
         log.debug("Пользователь {} поставил лайк фильму {}", userId, filmId);
         return getFilmById(filmId);
@@ -73,9 +71,7 @@ public class FilmService {
 
     public Film removeLike(Long filmId, Long userId) {
         getFilmById(filmId);
-        if (userStorage.getById(userId).isEmpty()) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
-        }
+        validateUserById(userId);
         filmStorage.removeLike(filmId, userId);
         log.debug("Пользователь {} удалил лайк у фильма {}", userId, filmId);
         return getFilmById(filmId);
@@ -97,6 +93,16 @@ public class FilmService {
             throw new ValidationException("Параметр sortBy должен быть 'year' или 'likes'");
         }
         return filmRepository.findFilmsByDirector(directorId, sortBy);
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        validateUserById(userId);
+        validateUserById(friendId);
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
+    private void validateUserById(Long userId) {
+        if (userStorage.getById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
     }
 
     private void validateFilm(Film film) {

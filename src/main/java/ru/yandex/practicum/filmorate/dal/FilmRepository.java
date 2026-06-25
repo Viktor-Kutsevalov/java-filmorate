@@ -34,6 +34,19 @@ public class FilmRepository extends BaseRepository<Film> {
             ORDER BY like_count DESC
             LIMIT ?
             """;
+    private static final String FIND_COMMON = """
+            SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) as like_count
+            FROM films f
+            LEFT JOIN mpa_ratings m ON f.mpa_id = m.id
+            LEFT JOIN film_likes fl ON f.id = fl.film_id
+            WHERE f.id IN (
+                SELECT film_id FROM film_likes WHERE user_id = ?
+                INTERSECT
+                SELECT film_id FROM film_likes WHERE user_id = ?
+            )
+            GROUP BY f.id
+            ORDER BY like_count DESC
+            """;
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedJdbcTemplate;
@@ -117,6 +130,12 @@ public class FilmRepository extends BaseRepository<Film> {
         List<Film> films = jdbcTemplate.query(sql, mapper, directorId);
         loadGenresAndLikes(films);
         loadDirectors(films);
+        return films;
+    }
+
+    public List<Film> findCommonFilms(Long userId, Long friendId) {
+        List<Film> films = jdbcTemplate.query(FIND_COMMON, mapper, userId, friendId);
+        loadGenresAndLikes(films);
         return films;
     }
 
