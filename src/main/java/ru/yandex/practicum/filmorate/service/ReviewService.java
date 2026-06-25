@@ -30,18 +30,23 @@ public class ReviewService {
             throw new NotFoundException("Фильм с id=" + review.getFilmId() + " не найден");
         }
         review.setUseful(0);
-        return reviewStorage.add(review);
+        Review saved = reviewStorage.add(review);
+        log.debug("Добавлен отзыв id={} пользователем {} к фильму {}", review.getReviewId(), review.getUserId(), review.getFilmId());
+        return saved;
     }
 
     public Review updateReview(Review review) {
         validateReview(review);
         getReviewById(review.getReviewId());
-        return reviewStorage.update(review);
+        Review update = reviewStorage.update(review);
+        log.debug("Обновлён отзыв id={}", update.getReviewId());
+        return update;
     }
 
     public void removeReview(Long reviewId) {
         getReviewById(reviewId);
         reviewStorage.deleteById(reviewId);
+        log.debug("Удалён отзыв id={}", reviewId);
     }
 
     public Review getReviewById(Long reviewId) {
@@ -58,18 +63,22 @@ public class ReviewService {
 
     public void addLikeReview(Long reviewId, Long userId) {
         addReaction(reviewId, userId, "LIKE", 1, 2);
+        log.debug("Пользователь {} поставил лайк отзыву {}", userId, reviewId);
     }
 
     public void addDislikeReview(Long reviewId, Long userId) {
         addReaction(reviewId, userId, "DISLIKE", -1, -2);
+        log.debug("Пользователь {} поставил дизлайк отзыву {}", userId, reviewId);
     }
 
     public void removeLikeReview(Long reviewId, Long userId) {
         removeReaction(reviewId, userId, "LIKE", -1);
+        log.debug("Пользователь {} удалил лайк с отзыва {}", userId, reviewId);
     }
 
     public void removeDislikeReview(Long reviewId, Long userId) {
         removeReaction(reviewId, userId, "DISLIKE", 1);
+        log.debug("Пользователь {} удалил дизлайк с отзыва {}", userId, reviewId);
     }
 
     private void validateReview(Review review) {
