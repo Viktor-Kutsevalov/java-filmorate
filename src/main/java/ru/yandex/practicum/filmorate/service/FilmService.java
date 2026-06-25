@@ -59,9 +59,7 @@ public class FilmService {
 
     public Film addLike(Long filmId, Long userId) {
         getFilmById(filmId);
-        if (userStorage.getById(userId).isEmpty()) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
-        }
+        validateUserById(userId);
         filmStorage.addLike(filmId, userId);
         log.debug("Пользователь {} поставил лайк фильму {}", userId, filmId);
         return getFilmById(filmId);
@@ -69,9 +67,7 @@ public class FilmService {
 
     public Film removeLike(Long filmId, Long userId) {
         getFilmById(filmId);
-        if (userStorage.getById(userId).isEmpty()) {
-            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
-        }
+        validateUserById(userId);
         filmStorage.removeLike(filmId, userId);
         log.debug("Пользователь {} удалил лайк у фильма {}", userId, filmId);
         return getFilmById(filmId);
@@ -83,6 +79,18 @@ public class FilmService {
         }
         int limit = (count == null) ? DEFAULT_POPULAR_COUNT : count;
         return filmStorage.getPopularFilms(limit);
+    }
+
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        validateUserById(userId);
+        validateUserById(friendId);
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
+    private void validateUserById(Long userId) {
+        if (userStorage.getById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
     }
 
     private void validateFilm(Film film) {
