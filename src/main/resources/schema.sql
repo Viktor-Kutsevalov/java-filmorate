@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS films CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS genres CASCADE;
 DROP TABLE IF EXISTS mpa_ratings CASCADE;
+DROP TABLE IF EXISTS film_director CASCADE;
+DROP TABLE IF EXISTS directors CASCADE;
 DROP TABLE IF EXISTS review_likes CASCADE;
 DROP TABLE IF EXISTS reviews CASCADE;
 
@@ -61,6 +63,18 @@ CREATE TABLE IF NOT EXISTS friends (
     CHECK (user_id != friend_id)
 );
 
+CREATE TABLE IF NOT EXISTS directors (
+    id INTEGER AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+    );
+
+CREATE TABLE IF NOT EXISTS film_director (
+    film_id BIGINT,
+    director_id INTEGER,
+    PRIMARY KEY (film_id, director_id),
+    FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
+    );
 CREATE TABLE IF NOT EXISTS reviews (
     review_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     content TEXT NOT NULL,

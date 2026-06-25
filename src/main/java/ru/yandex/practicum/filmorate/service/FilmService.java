@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.DirectorRepository;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.GenreRepository;
 import ru.yandex.practicum.filmorate.dal.MpaRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -32,6 +34,8 @@ public class FilmService {
     private final UserStorage userStorage;
     private final MpaRepository mpaRepository;
     private final GenreRepository genreRepository;
+    private final FilmRepository filmRepository;
+    private final DirectorRepository directorRepository;
 
     public List<Film> getAllFilms() {
         return filmStorage.getAll();
@@ -81,6 +85,14 @@ public class FilmService {
         return filmStorage.getPopularFilms(limit);
     }
 
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        directorRepository.findById(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id = " + directorId + " не найден"));
+
+        if (sortBy == null || (!"year".equalsIgnoreCase(sortBy) && !"likes".equalsIgnoreCase(sortBy))) {
+            throw new ValidationException("Параметр sortBy должен быть 'year' или 'likes'");
+        }
+        return filmRepository.findFilmsByDirector(directorId, sortBy);
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         validateUserById(userId);
         validateUserById(friendId);
