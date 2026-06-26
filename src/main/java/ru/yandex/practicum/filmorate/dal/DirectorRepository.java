@@ -27,13 +27,13 @@ public class DirectorRepository extends BaseRepository<Director> {
         return findMany(FIND_ALL);
     }
 
-    public Optional<Director> findById(int id) {
+    public Optional<Director> findById(Long id) {
         return findOne(FIND_BY_ID, id);
     }
 
     public Director save(Director director) {
-        long id = insert(INSERT, director.getName());
-        director.setId((int) id);
+        Long id = insert(INSERT, director.getName());
+        director.setId(id);
         return director;
     }
 
@@ -42,11 +42,11 @@ public class DirectorRepository extends BaseRepository<Director> {
         return director;
     }
 
-    public boolean deleteById(int id) {
+    public boolean deleteById(Long id) {
         return delete(DELETE, id);
     }
 
-    public List<Director> findAllByIds(Set<Integer> ids) {
+    public List<Director> findAllByIds(Set<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }

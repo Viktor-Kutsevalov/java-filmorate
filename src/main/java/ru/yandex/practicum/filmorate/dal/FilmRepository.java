@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.model.Director;   // <-- НОВЫЙ ИМПОРТ
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -112,20 +112,19 @@ public class FilmRepository extends BaseRepository<Film> {
         return films;
     }
 
-    public List<Film> findFilmsByDirector(int directorId, String sortBy) {
+    public List<Film> findFilmsByDirector(Long directorId, String sortBy) {
         String orderBy = "year".equalsIgnoreCase(sortBy)
                 ? "f.release_date"
                 : "COUNT(fl.user_id) DESC";
 
-        String sql = """
-                SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) as like_count
-                FROM films f
-                LEFT JOIN mpa_ratings m ON f.mpa_id = m.id
-                LEFT JOIN film_likes fl ON f.id = fl.film_id
-                JOIN film_director fd ON f.id = fd.film_id
-                WHERE fd.director_id = ?
-                GROUP BY f.id
-                ORDER BY """ + orderBy;
+        String sql = "SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) as like_count " +
+                "FROM films f " +
+                "LEFT JOIN mpa_ratings m ON f.mpa_id = m.id " +
+                "LEFT JOIN film_likes fl ON f.id = fl.film_id " +
+                "JOIN film_director fd ON f.id = fd.film_id " +
+                "WHERE fd.director_id = ? " +
+                "GROUP BY f.id " +
+                "ORDER BY " + orderBy;
 
         List<Film> films = jdbcTemplate.query(sql, mapper, directorId);
         loadGenresAndLikes(films);
@@ -136,6 +135,7 @@ public class FilmRepository extends BaseRepository<Film> {
     public List<Film> findCommonFilms(Long userId, Long friendId) {
         List<Film> films = jdbcTemplate.query(FIND_COMMON, mapper, userId, friendId);
         loadGenresAndLikes(films);
+        loadDirectors(films);
         return films;
     }
 
@@ -234,7 +234,7 @@ public class FilmRepository extends BaseRepository<Film> {
         namedJdbcTemplate.query(query, params, rs -> {
             long filmId = rs.getLong("film_id");
             Director director = new Director();
-            director.setId(rs.getInt("id"));
+            director.setId(rs.getLong("id"));   // здесь id теперь Long
             director.setName(rs.getString("name"));
             result.computeIfAbsent(filmId, k -> new HashSet<>()).add(director);
         });

@@ -71,5 +71,4 @@ public class ReviewController {
         log.trace("Получен запрос на удаление дизлайка пользователя {} отзыва c id={}", userId, id);
         reviewService.removeDislikeReview(id, userId);
     }
-
 }

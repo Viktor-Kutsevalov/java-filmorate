@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.dal.GenreRepository;
 import ru.yandex.practicum.filmorate.dal.MpaRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -48,7 +49,7 @@ public class FilmService {
 
     public Film addFilm(Film film) {
         validateFilm(film);
-        validateMpaAndGenres(film);
+        validateMpaAndGenresAndDirectors(film);
         return filmStorage.add(film);
     }
 
@@ -57,7 +58,7 @@ public class FilmService {
         if (film.getId() == null || filmStorage.getById(film.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
         }
-        validateMpaAndGenres(film);
+        validateMpaAndGenresAndDirectors(film);
         return filmStorage.update(film);
     }
 
@@ -85,18 +86,26 @@ public class FilmService {
         return filmStorage.getPopularFilms(limit);
     }
 
-    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+    public List<Film> getFilmsByDirector(Long directorId, String sortBy) {
         directorRepository.findById(directorId)
                 .orElseThrow(() -> new NotFoundException("Режиссёр с id = " + directorId + " не найден"));
 
-        if (sortBy == null || (!"year".equalsIgnoreCase(sortBy) && !"likes".equalsIgnoreCase(sortBy))) {
+        if ((!"year".equalsIgnoreCase(sortBy) && !"likes".equalsIgnoreCase(sortBy))) {
             throw new ValidationException("Параметр sortBy должен быть 'year' или 'likes'");
         }
         return filmRepository.findFilmsByDirector(directorId, sortBy);
+    }
+
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         validateUserById(userId);
         validateUserById(friendId);
         return filmStorage.getCommonFilms(userId, friendId);
+    }
+
+    public void deleteFilm(Long filmId) {
+        getFilmById(filmId);
+        filmStorage.deleteById(filmId);
+        log.debug("Фильм с id={} удалён", filmId);
     }
 
     private void validateUserById(Long userId) {
@@ -120,12 +129,12 @@ public class FilmService {
         }
     }
 
-    private void validateMpaAndGenres(Film film) {
+    private void validateMpaAndGenresAndDirectors(Film film) {
         if (film.getMpa() != null && film.getMpa().getId() != 0) {
             mpaRepository.findById(film.getMpa().getId())
                     .orElseThrow(() -> new NotFoundException("MPA с id=" + film.getMpa().getId() + " не найден"));
         }
-        // Проверка жанров одним запросом
+
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             Set<Integer> genreIds = film.getGenres().stream()
                     .map(Genre::getId)
@@ -136,6 +145,19 @@ public class FilmService {
                 Set<Integer> missingIds = new HashSet<>(genreIds);
                 missingIds.removeAll(existingIds);
                 throw new NotFoundException("Жанры с id = " + missingIds + " не найдены");
+            }
+        }
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            Set<Long> directorIds = film.getDirectors().stream()
+                    .map(Director::getId)
+                    .collect(Collectors.toSet());
+            List<Director> existingDirectors = directorRepository.findAllByIds(directorIds);
+            if (existingDirectors.size() != directorIds.size()) {
+                Set<Long> existingIds = existingDirectors.stream().map(Director::getId).collect(Collectors.toSet());
+                Set<Long> missingIds = new HashSet<>(directorIds);
+                missingIds.removeAll(existingIds);
+                throw new NotFoundException("Режиссёры с id = " + missingIds + " не найдены");
             }
         }
     }

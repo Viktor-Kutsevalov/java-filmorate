@@ -41,5 +41,4 @@ public class ReviewLikeRepository {
             return Optional.empty();
         }
     }
-
 }
