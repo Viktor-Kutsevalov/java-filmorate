@@ -35,7 +35,7 @@ public class DirectorServiceTest {
     @Test
     @DisplayName("Получить режиссёра по id")
     void getDirectorById() {
-        Director director = directorService.getDirectorById(1L);   // 1L вместо 1
+        Director director = directorService.getDirectorById(1L);
         assertThat(director.getId()).isEqualTo(1L);
         assertThat(director.getName()).isEqualTo("Test Director 1");
     }
@@ -71,7 +71,7 @@ public class DirectorServiceTest {
     @DisplayName("Обновить режиссёра")
     void updateDirector() {
         Director update = new Director();
-        update.setId(1L);   // 1L
+        update.setId(1L);
         update.setName("Updated Director");
         Director updated = directorService.updateDirector(update);
         assertThat(updated.getName()).isEqualTo("Updated Director");
@@ -84,7 +84,7 @@ public class DirectorServiceTest {
     @DisplayName("Обновить несуществующего режиссёра")
     void updateDirectorNotFound() {
         Director update = new Director();
-        update.setId(999L);   // 999L
+        update.setId(999L);
         update.setName("Unknown");
         assertThrows(NotFoundException.class, () -> directorService.updateDirector(update));
     }
@@ -93,7 +93,7 @@ public class DirectorServiceTest {
     @DisplayName("Обновить режиссёра с пустым именем")
     void updateDirectorEmptyName() {
         Director update = new Director();
-        update.setId(1L);   // 1L
+        update.setId(1L);
         update.setName("");
         assertThrows(ValidationException.class, () -> directorService.updateDirector(update));
     }
@@ -104,7 +104,7 @@ public class DirectorServiceTest {
         Director newDirector = new Director();
         newDirector.setName("ToDelete");
         Director saved = directorService.addDirector(newDirector);
-        Long id = saved.getId();   // теперь Long
+        Long id = saved.getId();
 
         directorService.deleteDirector(id);
         assertThrows(NotFoundException.class, () -> directorService.getDirectorById(id));

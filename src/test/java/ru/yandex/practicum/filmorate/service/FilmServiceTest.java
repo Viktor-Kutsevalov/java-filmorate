@@ -94,12 +94,12 @@ public class FilmServiceTest {
     @Test
     @DisplayName("Режиссёр не найден")
     void getFilmsByDirectorNotFound() {
-        assertThrows(NotFoundException.class, () -> fS.getFilmsByDirector(999L, "year"));   // 999L
+        assertThrows(NotFoundException.class, () -> fS.getFilmsByDirector(999L, "year"));
     }
 
     @Test
     @DisplayName("Некорректный параметр сортировки")
     void getFilmsByDirectorInvalidSort() {
-        assertThrows(ValidationException.class, () -> fS.getFilmsByDirector(1L, "invalid"));   // 1L
+        assertThrows(ValidationException.class, () -> fS.getFilmsByDirector(1L, "invalid"));
     }
 }
