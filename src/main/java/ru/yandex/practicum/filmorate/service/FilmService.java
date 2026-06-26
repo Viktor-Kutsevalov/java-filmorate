@@ -95,7 +95,7 @@ public class FilmService {
         return filmRepository.findFilmsByDirector(directorId, sortBy);
     }
 
-    public List<Film> getCommonFilms (Long userId, Long friendId) {
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
             validateUserById(userId);
             validateUserById(friendId);
             return filmStorage.getCommonFilms(userId, friendId);
