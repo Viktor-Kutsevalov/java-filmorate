@@ -81,4 +81,10 @@ public class UserService {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
     }
+
+    public void deleteUser(Long userId) {
+        getUserById(userId);
+        userStorage.deleteById(userId);
+        log.debug("Пользователь с id={} удалён", userId);
+    }
 }

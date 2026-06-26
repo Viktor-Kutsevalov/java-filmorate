@@ -89,15 +89,17 @@ public class FilmService {
         directorRepository.findById(directorId)
                 .orElseThrow(() -> new NotFoundException("Режиссёр с id = " + directorId + " не найден"));
 
-        if (sortBy == null || (!"year".equalsIgnoreCase(sortBy) && !"likes".equalsIgnoreCase(sortBy))) {
+        if ((!"year".equalsIgnoreCase(sortBy) && !"likes".equalsIgnoreCase(sortBy))) {
             throw new ValidationException("Параметр sortBy должен быть 'year' или 'likes'");
         }
         return filmRepository.findFilmsByDirector(directorId, sortBy);
-    public List<Film> getCommonFilms(Long userId, Long friendId) {
-        validateUserById(userId);
-        validateUserById(friendId);
-        return filmStorage.getCommonFilms(userId, friendId);
     }
+
+    public List<Film> getCommonFilms (Long userId, Long friendId) {
+            validateUserById(userId);
+            validateUserById(friendId);
+            return filmStorage.getCommonFilms(userId, friendId);
+        }
 
     private void validateUserById(Long userId) {
         if (userStorage.getById(userId).isEmpty()) {
@@ -138,5 +140,11 @@ public class FilmService {
                 throw new NotFoundException("Жанры с id = " + missingIds + " не найдены");
             }
         }
+    }
+
+    public void deleteFilm(Long filmId) {
+        getFilmById(filmId);
+        filmStorage.deleteById(filmId);
+        log.debug("Фильм с id={} удалён", filmId);
     }
 }
