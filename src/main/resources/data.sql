@@ -17,3 +17,5 @@ MERGE INTO directors (id, name) VALUES
     (1, 'Кристофер Нолан'),
     (2, 'Квентин Тарантино'),
     (3, 'Стивен Спилберг');
+
+ALTER TABLE directors ALTER COLUMN id RESTART WITH 4;

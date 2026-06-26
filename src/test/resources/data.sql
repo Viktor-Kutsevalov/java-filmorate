@@ -13,15 +13,23 @@ MERGE INTO genres (id, name) VALUES
     (5, 'Документальный'),
     (6, 'Боевик');
 
+MERGE INTO directors (id, name) VALUES
+    (1, 'Test Director 1'),
+    (2, 'Test Director 2');
+
 MERGE INTO users (id, email, login, name, birthday) KEY(id)
-VALUES (1, 'test@example.com', 'testLogin', 'Test User', '2000-01-01');
-MERGE INTO users (id, email, login, name, birthday) KEY(id)
-VALUES (2, 'testRev@yandex.ru', 'Login2', 'User2', '1999-09-09');
+    VALUES
+    (1, 'test@example.com', 'testLogin', 'Test User', '2000-01-01'),
+    (2, 'testRev@yandex.ru', 'Login2', 'User2', '1999-09-09'),
+    (3, 'testCommon@yandex.ru', 'Login3', 'User3', '2000-10-10');
+
 MERGE INTO films (id, name, description, release_date, duration, mpa_id) KEY(id)
-VALUES (1, 'Film1', 'Description1', '2020-01-01', 120, 1);
-MERGE INTO users (id, email, login, name, birthday) KEY(id)
-VALUES (3, 'testCommon@yandex.ru', 'Login3', 'User3', '2000-10-10');
-MERGE INTO films (id, name, description, release_date, duration, mpa_id) KEY(id)
-VALUES (1, 'Film1', 'Description1', '2020-01-01', 120, 1);
-MERGE INTO films (id, name, description, release_date, duration, mpa_id) KEY(id)
-VALUES (2, 'Film2', 'Description2', '2000-01-01', 113, 1);
+    VALUES
+    (1, 'Film1', 'Description1', '2020-01-01', 120, 1),
+    (2, 'Film2', 'Description2', '2000-01-01', 113, 1);
+
+MERGE INTO film_director (film_id, director_id) VALUES
+    (1, 1),
+    (2, 2);
+
+ALTER TABLE directors ALTER COLUMN id RESTART WITH 3;

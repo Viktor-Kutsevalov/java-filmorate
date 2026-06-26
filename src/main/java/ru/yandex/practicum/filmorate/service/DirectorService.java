@@ -20,7 +20,7 @@ public class DirectorService {
         return directorRepository.findAll();
     }
 
-    public Director getDirectorById(int id) {
+    public Director getDirectorById(Long id) {
         return directorRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Режиссёр с id = " + id + " не найден"));
     }
@@ -32,13 +32,13 @@ public class DirectorService {
 
     public Director updateDirector(Director director) {
         validateDirector(director);
-        if (director.getId() == 0 || directorRepository.findById(director.getId()).isEmpty()) {
+        if (director.getId() == null || directorRepository.findById(director.getId()).isEmpty()) {
             throw new NotFoundException("Режиссёр с id = " + director.getId() + " не найден");
         }
         return directorRepository.update(director);
     }
 
-    public void deleteDirector(int id) {
+    public void deleteDirector(Long id) {
         getDirectorById(id);
         directorRepository.deleteById(id);
     }

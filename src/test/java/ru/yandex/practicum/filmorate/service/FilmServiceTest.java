@@ -7,8 +7,10 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,5 +70,36 @@ public class FilmServiceTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(1).getId()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("Получить фильмы режиссёра, сортировка по году")
+    void getFilmsByDirectorSortedByYear() {
+        List<Film> films = fS.getFilmsByDirector(1L, "year");   // 1L
+        assertThat(films).isNotEmpty();
+        assertThat(films).extracting(Film::getReleaseDate)
+                .isSortedAccordingTo(Comparator.naturalOrder());
+    }
+
+    @Test
+    @DisplayName("Получить фильмы режиссёра, сортировка по лайкам")
+    void getFilmsByDirectorSortedByLikes() {
+        fS.addLike(1L, 1L);
+        fS.addLike(1L, 2L);
+        List<Film> films = fS.getFilmsByDirector(1L, "likes");   // 1L
+        assertThat(films).isNotEmpty();
+        assertThat(films.get(0).getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("Режиссёр не найден")
+    void getFilmsByDirectorNotFound() {
+        assertThrows(NotFoundException.class, () -> fS.getFilmsByDirector(999L, "year"));   // 999L
+    }
+
+    @Test
+    @DisplayName("Некорректный параметр сортировки")
+    void getFilmsByDirectorInvalidSort() {
+        assertThrows(ValidationException.class, () -> fS.getFilmsByDirector(1L, "invalid"));   // 1L
     }
 }
