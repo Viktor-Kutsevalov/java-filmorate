@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -68,6 +69,10 @@ public class UserService {
         getUserById(userId);
         getUserById(otherId);
         return userStorage.getCommonFriends(userId, otherId);
+    }
+
+    public List<Film> findRecommendations(Long userId, int limit) {
+        return userStorage.findRecommendations(userId, limit);
     }
 
     private void validateUser(User user) {
