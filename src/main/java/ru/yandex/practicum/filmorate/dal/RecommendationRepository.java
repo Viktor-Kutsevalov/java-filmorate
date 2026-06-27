@@ -14,6 +14,7 @@ public class RecommendationRepository {
 
     private final JdbcTemplate jdbc;
     private final FilmRowMapper filmMapper;
+    private final FilmRepository filmRepository;
 
     public List<Film> findRecommendations(Long userId, int limit) {
         String sql = """
@@ -35,6 +36,8 @@ public class RecommendationRepository {
                 ORDER BY f.release_date DESC
                 """;
 
-        return jdbc.query(sql, filmMapper, userId, userId, userId);
+        List<Film> films = jdbc.query(sql, filmMapper, userId, userId, userId);
+        filmRepository.loadGenresAndDirectors(films);
+        return films;
     }
 }

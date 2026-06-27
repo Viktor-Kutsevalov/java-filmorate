@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dal;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.ReviewRowMapper;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.model.Review;
 
 import java.util.List;
@@ -40,7 +41,8 @@ public class ReviewRepository extends BaseRepository<Review> {
                 review.getIsPositive(),
                 review.getReviewId()
         );
-        return review;
+        return findById(review.getReviewId())
+                .orElseThrow(() -> new InternalServerException("Не удалось обновить отзыв"));
     }
 
     public Review save(Review review) {
