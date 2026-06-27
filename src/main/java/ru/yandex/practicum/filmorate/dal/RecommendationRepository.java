@@ -16,7 +16,7 @@ public class RecommendationRepository {
     private final FilmRowMapper filmMapper;
 
     private static final String SELECT_BASE = """
-            SELECT 
+            SELECT
                 f.id,
                 f.name,
                 f.description,
@@ -54,11 +54,11 @@ public class RecommendationRepository {
                 .toList();
     }
 
-
     private record RecommendationItem(Film film, double score) {
         public double getScore() {
             return score;
         }
+
         public Film getFilm() {
             return film;
         }
@@ -67,8 +67,8 @@ public class RecommendationRepository {
     private List<RecommendationItem> getFriendsRecommendations(Long userId) {
         String sql = SELECT_BASE + """
                 WHERE f.id IN (
-                    SELECT fl.film_id 
-                    FROM film_likes fl 
+                    SELECT fl.film_id
+                    FROM film_likes fl
                     WHERE fl.user_id IN (SELECT friend_id FROM friends WHERE user_id = ?)
                 )
                 AND f.id NOT IN (SELECT film_id FROM film_likes WHERE user_id = ?)
@@ -80,7 +80,6 @@ public class RecommendationRepository {
                 .toList();
     }
 
-    // 2. Жанры — вес 2.0
     private List<RecommendationItem> getGenreRecommendations(Long userId) {
         String sql = SELECT_BASE + """
                 JOIN film_genre fg ON f.id = fg.film_id
