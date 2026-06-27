@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
@@ -20,6 +22,7 @@ public class ReviewService {
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
     private final ReviewStorage reviewStorage;
+    private final EventService eventService;
 
     public Review addReview(Review review) {
         validateReview(review);
@@ -31,6 +34,7 @@ public class ReviewService {
         }
         review.setUseful(0);
         Review saved = reviewStorage.add(review);
+        eventService.addEvent(review.getUserId(), EventType.REVIEW, Operation.ADD, saved.getReviewId());
         log.debug("Добавлен отзыв id={} пользователем {} к фильму {}", review.getReviewId(), review.getUserId(), review.getFilmId());
         return saved;
     }
@@ -40,13 +44,15 @@ public class ReviewService {
         getReviewById(review.getReviewId());
         Review update = reviewStorage.update(review);
         log.debug("Обновлён отзыв id={}", update.getReviewId());
+        eventService.addEvent(review.getUserId(), EventType.REVIEW, Operation.UPDATE, review.getReviewId());
         return update;
     }
 
     public void removeReview(Long reviewId) {
-        getReviewById(reviewId);
+        Review review = getReviewById(reviewId);
         reviewStorage.deleteById(reviewId);
         log.debug("Удалён отзыв id={}", reviewId);
+        eventService.addEvent(review.getUserId(), EventType.REVIEW, Operation.REMOVE, reviewId);
     }
 
     public Review getReviewById(Long reviewId) {
