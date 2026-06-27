@@ -9,9 +9,7 @@ import ru.yandex.practicum.filmorate.dal.GenreRepository;
 import ru.yandex.practicum.filmorate.dal.MpaRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -37,6 +35,7 @@ public class FilmService {
     private final GenreRepository genreRepository;
     private final FilmRepository filmRepository;
     private final DirectorRepository directorRepository;
+    private final EventService eventService;
 
     public List<Film> getAllFilms() {
         return filmStorage.getAll();
@@ -66,6 +65,7 @@ public class FilmService {
         getFilmById(filmId);
         validateUserById(userId);
         filmStorage.addLike(filmId, userId);
+        eventService.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
         log.debug("Пользователь {} поставил лайк фильму {}", userId, filmId);
         return getFilmById(filmId);
     }
@@ -74,6 +74,7 @@ public class FilmService {
         getFilmById(filmId);
         validateUserById(userId);
         filmStorage.removeLike(filmId, userId);
+        eventService.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         log.debug("Пользователь {} удалил лайк у фильма {}", userId, filmId);
         return getFilmById(filmId);
     }

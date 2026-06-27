@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS review_likes CASCADE;
 DROP TABLE IF EXISTS reviews CASCADE;
 DROP TABLE IF EXISTS film_director CASCADE;
 DROP TABLE IF EXISTS directors CASCADE;
+DROP TABLE IF EXISTS events CASCADE;
 
 CREATE TABLE IF NOT EXISTS mpa_ratings (
     id INTEGER PRIMARY KEY,
@@ -66,7 +67,7 @@ CREATE TABLE IF NOT EXISTS friends (
 CREATE TABLE IF NOT EXISTS directors (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL
-    );
+);
 
 CREATE TABLE IF NOT EXISTS film_director (
     film_id BIGINT,
@@ -74,7 +75,7 @@ CREATE TABLE IF NOT EXISTS film_director (
     PRIMARY KEY (film_id, director_id),
     FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
     FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
-    );
+);
 
 CREATE TABLE IF NOT EXISTS reviews (
     review_id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -85,7 +86,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     useful INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE
-    );
+);
 
 CREATE TABLE IF NOT EXISTS review_likes (
     review_id BIGINT,
@@ -95,4 +96,14 @@ CREATE TABLE IF NOT EXISTS review_likes (
     FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CHECK (type IN ('LIKE', 'DISLIKE'))
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    event_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_id BIGINT NOT NULL,
+    event_type VARCHAR(20) NOT NULL,
+    operation VARCHAR(10) NOT NULL,
+    entity_id BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
