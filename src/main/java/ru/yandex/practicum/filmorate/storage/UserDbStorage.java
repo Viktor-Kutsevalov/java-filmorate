@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dal.FriendRepository;
+import ru.yandex.practicum.filmorate.dal.RecommendationRepository;
 import ru.yandex.practicum.filmorate.dal.UserRepository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
@@ -17,6 +19,7 @@ public class UserDbStorage implements UserStorage {
 
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
+    private final RecommendationRepository recommendationRepository;
 
     @Override
     public User add(User user) {
@@ -61,6 +64,11 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> getCommonFriends(Long userId, Long otherId) {
         return friendRepository.getCommonFriends(userId, otherId);
+    }
+
+    @Override
+    public List<Film> findRecommendations(Long userId, int limit) {
+        return recommendationRepository.findRecommendations(userId, limit);
     }
 
     public Optional<User> findUserById(long id) {
