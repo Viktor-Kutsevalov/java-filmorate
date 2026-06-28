@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -84,7 +85,8 @@ public class FilmRepository extends BaseRepository<Film> {
         film.setId(id);
         updateGenres(film);
         updateDirectors(film);
-        return film;
+        return findById(id)
+                .orElseThrow(() -> new InternalServerException("Не удалось сохранить фильм"));
     }
 
     public Film update(Film film) {
@@ -98,11 +100,17 @@ public class FilmRepository extends BaseRepository<Film> {
         );
         updateGenres(film);
         updateDirectors(film);
-        return film;
+        return findById(film.getId())
+                .orElseThrow(() -> new InternalServerException("Не удалось обновить фильм"));
     }
 
     public boolean deleteById(long id) {
         return delete(DELETE, id);
+    }
+
+    public void loadGenresAndDirectors(List<Film> films) {
+        loadGenresAndLikes(films);
+        loadDirectors(films);
     }
 
     public List<Film> findPopular(int limit) {
@@ -176,7 +184,7 @@ public class FilmRepository extends BaseRepository<Film> {
             Genre genre = new Genre();
             genre.setId(rs.getInt("id"));
             genre.setName(rs.getString("name"));
-            result.computeIfAbsent(filmId, k -> new HashSet<>()).add(genre);
+            result.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(genre);
         });
         return result;
     }
@@ -192,7 +200,7 @@ public class FilmRepository extends BaseRepository<Film> {
         namedJdbcTemplate.query(query, params, rs -> {
             long filmId = rs.getLong("film_id");
             long userId = rs.getLong("user_id");
-            result.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
+            result.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(userId);
         });
         return result;
     }
