@@ -184,7 +184,7 @@ public class FilmRepository extends BaseRepository<Film> {
             Genre genre = new Genre();
             genre.setId(rs.getInt("id"));
             genre.setName(rs.getString("name"));
-            result.computeIfAbsent(filmId, k -> new HashSet<>()).add(genre);
+            result.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(genre);
         });
         return result;
     }
@@ -200,7 +200,7 @@ public class FilmRepository extends BaseRepository<Film> {
         namedJdbcTemplate.query(query, params, rs -> {
             long filmId = rs.getLong("film_id");
             long userId = rs.getLong("user_id");
-            result.computeIfAbsent(filmId, k -> new HashSet<>()).add(userId);
+            result.computeIfAbsent(filmId, k -> new LinkedHashSet<>()).add(userId);
         });
         return result;
     }
