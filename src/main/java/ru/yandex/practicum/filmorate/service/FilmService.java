@@ -126,7 +126,7 @@ public class FilmService {
         Set<String> validValues = Set.of("title", "director");
         for (String s : searchBy) {
             if (!validValues.contains(s)) {
-                throw new ValidationException("Параметр by может содержать только 'title' и/или 'director'");
+                throw new ValidationException("Параметр by может содержать 'title' и/или 'director'");
             }
         }
         return filmRepository.searchFilms(query, searchBy);
