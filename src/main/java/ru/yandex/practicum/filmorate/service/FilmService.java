@@ -79,12 +79,12 @@ public class FilmService {
         return getFilmById(filmId);
     }
 
-    public List<Film> getPopularFilms(Integer count) {
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
         if (count != null && count <= 0) {
             throw new ValidationException("Параметр count должен быть положительным числом");
         }
         int limit = (count == null) ? DEFAULT_POPULAR_COUNT : count;
-        return filmStorage.getPopularFilms(limit);
+        return filmStorage.getPopularFilms(limit, genreId, year);
     }
 
     public List<Film> getFilmsByDirector(Long directorId, String sortBy) {

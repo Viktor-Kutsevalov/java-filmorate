@@ -26,15 +26,6 @@ public class FilmRepository extends BaseRepository<Film> {
     private static final String INSERT = "INSERT INTO films(name, description, release_date, duration, mpa_id) VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
     private static final String DELETE = "DELETE FROM films WHERE id = ?";
-    private static final String FIND_POPULAR = """
-            SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) as like_count
-            FROM films f
-            LEFT JOIN mpa_ratings m ON f.mpa_id = m.id
-            LEFT JOIN film_likes fl ON f.id = fl.film_id
-            GROUP BY f.id
-            ORDER BY like_count DESC
-            LIMIT ?
-            """;
     private static final String FIND_COMMON = """
             SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) as like_count
             FROM films f
@@ -113,8 +104,35 @@ public class FilmRepository extends BaseRepository<Film> {
         loadDirectors(films);
     }
 
-    public List<Film> findPopular(int limit) {
-        List<Film> films = jdbcTemplate.query(FIND_POPULAR, mapper, limit);
+    public List<Film> findPopular(int limit, Integer genreId, Integer year) {
+        StringBuilder sql = new StringBuilder("""
+                SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) as like_count
+                FROM films f
+                LEFT JOIN mpa_ratings m ON f.mpa_id = m.id
+                LEFT JOIN film_likes fl ON f.id = fl.film_id
+                """);
+
+        if (genreId != null) {
+            sql.append("JOIN film_genre fg ON f.id = fg.film_id ");
+        }
+
+        sql.append("WHERE 1=1 ");
+
+        if (genreId != null) {
+            sql.append("AND fg.genre_id = ? ");
+        }
+        if (year != null) {
+            sql.append("AND YEAR(f.release_date) = ? ");
+        }
+
+        sql.append("GROUP BY f.id ORDER BY like_count DESC LIMIT ?");
+
+        List<Object> params = new ArrayList<>();
+        if (genreId != null) params.add(genreId);
+        if (year != null) params.add(year);
+        params.add(limit);
+
+        List<Film> films = jdbcTemplate.query(sql.toString(), mapper, params.toArray());
         loadGenresAndLikes(films);
         loadDirectors(films);
         return films;
