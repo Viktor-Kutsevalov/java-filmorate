@@ -52,7 +52,12 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getPopularFilms(int count) {
-        return filmRepository.findPopular(count);
+    public List<Film> getPopularFilms(int count, Integer genreId, Integer year) {
+        return filmRepository.findPopular(count, genreId, year);
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        return filmRepository.findCommonFilms(userId, friendId);
     }
 }

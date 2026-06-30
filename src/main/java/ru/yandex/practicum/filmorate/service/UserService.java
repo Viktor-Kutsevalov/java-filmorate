@@ -5,6 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -16,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+    private final EventService eventService;
 
     public List<User> getAllUsers() {
         return userStorage.getAll();
@@ -48,6 +52,7 @@ public class UserService {
     public void addFriend(Long userId, Long friendId) {
         getUserById(userId);
         getUserById(friendId);
+        eventService.addEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
         userStorage.addFriend(userId, friendId);
         log.debug("Пользователь {} добавил в друзья {}", userId, friendId);
     }
@@ -55,6 +60,7 @@ public class UserService {
     public void removeFriend(Long userId, Long friendId) {
         getUserById(userId);
         getUserById(friendId);
+        eventService.addEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
         userStorage.removeFriend(userId, friendId);
         log.debug("Пользователь {} удалил из друзей {}", userId, friendId);
     }
@@ -70,6 +76,10 @@ public class UserService {
         return userStorage.getCommonFriends(userId, otherId);
     }
 
+    public List<Film> findRecommendations(Long userId, int limit) {
+        return userStorage.findRecommendations(userId, limit);
+    }
+
     private void validateUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
             throw new ValidationException("Email должен быть указан и содержать @");
@@ -80,5 +90,11 @@ public class UserService {
         if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
+    }
+
+    public void deleteUser(Long userId) {
+        getUserById(userId);
+        userStorage.deleteById(userId);
+        log.debug("Пользователь с id={} удалён", userId);
     }
 }
