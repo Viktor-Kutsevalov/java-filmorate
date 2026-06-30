@@ -152,6 +152,7 @@ public class FilmRepository extends BaseRepository<Film> {
                 "GROUP BY f.id " +
                 "ORDER BY " + orderBy;
 
+
         List<Film> films = jdbcTemplate.query(sql, mapper, directorId);
         loadGenresAndLikes(films);
         loadDirectors(films);
@@ -160,6 +161,59 @@ public class FilmRepository extends BaseRepository<Film> {
 
     public List<Film> findCommonFilms(Long userId, Long friendId) {
         List<Film> films = jdbcTemplate.query(FIND_COMMON, mapper, userId, friendId);
+        loadGenresAndLikes(films);
+        loadDirectors(films);
+        return films;
+    }
+
+    public List<Film> searchFilms(String query, List<String> searchBy) {
+        boolean byTitle = searchBy.contains("title");
+        boolean byDirector = searchBy.contains("director");
+        String pattern = "%" + query + "%";
+
+        String sql;
+        Object[] params;
+
+        if (byTitle && byDirector) {
+            sql = """
+                    SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) AS like_count
+                    FROM films f
+                    LEFT JOIN mpa_ratings m ON f.mpa_id = m.id
+                    LEFT JOIN film_likes fl ON f.id = fl.film_id
+                    LEFT JOIN film_director fd ON f.id = fd.film_id
+                    LEFT JOIN directors d ON fd.director_id = d.id
+                    WHERE LOWER(f.name) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)
+                    GROUP BY f.id
+                    ORDER BY like_count DESC
+                    """;
+            params = new Object[]{pattern, pattern};
+        } else if (byDirector) {
+            sql = """
+                    SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) AS like_count
+                    FROM films f
+                    LEFT JOIN mpa_ratings m ON f.mpa_id = m.id
+                    LEFT JOIN film_likes fl ON f.id = fl.film_id
+                    JOIN film_director fd ON f.id = fd.film_id
+                    JOIN directors d ON fd.director_id = d.id
+                    WHERE LOWER(d.name) LIKE LOWER(?)
+                    GROUP BY f.id
+                    ORDER BY like_count DESC
+                    """;
+            params = new Object[]{pattern};
+        } else {
+            sql = """
+                    SELECT f.*, m.name AS mpa_name, COUNT(fl.user_id) AS like_count
+                    FROM films f
+                    LEFT JOIN mpa_ratings m ON f.mpa_id = m.id
+                    LEFT JOIN film_likes fl ON f.id = fl.film_id
+                    WHERE LOWER(f.name) LIKE LOWER(?)
+                    GROUP BY f.id
+                    ORDER BY like_count DESC
+                    """;
+            params = new Object[]{pattern};
+        }
+
+        List<Film> films = jdbcTemplate.query(sql, mapper, params);
         loadGenresAndLikes(films);
         loadDirectors(films);
         return films;

@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -107,6 +108,28 @@ public class FilmService {
         getFilmById(filmId);
         filmStorage.deleteById(filmId);
         log.debug("Фильм с id={} удалён", filmId);
+    }
+
+    public List<Film> searchFilms(String query, String by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Параметр query не может быть пустым");
+        }
+        if (by == null || by.isBlank()) {
+            throw new ValidationException("Параметр by не может быть пустым");
+        }
+        List<String> searchBy = Arrays.stream(by.split(","))
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+
+        Set<String> validValues = Set.of("title", "director");
+        for (String s : searchBy) {
+            if (!validValues.contains(s)) {
+                throw new ValidationException("Параметр by может содержать 'title' и/или 'director'");
+            }
+        }
+        return filmRepository.searchFilms(query, searchBy);
     }
 
     private void validateUserById(Long userId) {
