@@ -113,6 +113,6 @@ public class DirectorServiceTest {
     @Test
     @DisplayName("Удалить несуществующего режиссёра")
     void deleteDirectorNotFound() {
-        assertThrows(NotFoundException.class, () -> directorService.deleteDirector(999L));   // 999L
+        assertThrows(NotFoundException.class, () -> directorService.deleteDirector(999L));
     }
 }
